@@ -1,30 +1,26 @@
-import 'dart:developer';
 import 'dart:io';
-
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:gallery_saver/gallery_saver.dart';
+import 'package:gallery_saver_plus/gallery_saver.dart';
+import 'package:get/get.dart';
 import 'package:path/path.dart' as path;
-import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
-
-import '../../colors/all_colors.dart';
-import '../../provider/getStatusProvider.dart';
+import 'package:whatsapp_status_saver/constants/whatsapp_path.dart';
+import 'package:whatsapp_status_saver/controllers/status_controller.dart';
 
 class VideoView extends StatefulWidget {
-  String videoPath;
-  bool deleteVideo;
+  final String videoPath;
+  final bool deleteVideo;
 
-  VideoView({super.key, required this.videoPath, this.deleteVideo = false});
+  const VideoView({super.key, required this.videoPath, this.deleteVideo = false});
 
   @override
   State<VideoView> createState() => _VideoViewState();
 }
 
 class _VideoViewState extends State<VideoView> {
-  var whatsAppType;
+  final StatusController statusController = Get.find();
 
   late VideoPlayerController _controller;
   late ChewieController _chewieController;
@@ -33,20 +29,20 @@ class _VideoViewState extends State<VideoView> {
   @override
   void initState() {
     super.initState();
+
     _controller = VideoPlayerController.file(File(widget.videoPath));
     _initializeVideoPlayerFuture = _controller.initialize().then((_) {
       _controller.play(); // Start playing the video
     });
+
     _chewieController = ChewieController(
       videoPlayerController: _controller,
       autoPlay: true,
       looping: true,
+      errorBuilder: (context, errorMessage) {
+        return Center(child: Text('Error loading video: $errorMessage'));
+      },
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      whatsAppType =
-          Provider.of<GetStatusProvider>(context, listen: false).whatsAppPath;
-    });
-    debugPrint("whatsapp type $whatsAppType");
   }
 
   @override
@@ -62,14 +58,14 @@ class _VideoViewState extends State<VideoView> {
 
     // Check if the video path exists
     if (!File(videoPath).existsSync()) {
-      log("Video file does not exist: $videoPath");
+      debugPrint("Video file does not exist: $videoPath");
       return;
     }
 
-    // Create the directory
-    final directory = Directory(whatsAppType
-        ? '/storage/emulated/0/My App/WhatsApp'
-        : '/storage/emulated/0/My App/WhatsApp Business');
+    // Create directory if doesn't exist
+    final directory = Directory(
+      statusController.whatsAppPath.value ? WhatsAppPath.whatsappDir : WhatsAppPath.whatsappBDir,
+    );
     if (!directory.existsSync()) {
       directory.createSync(recursive: true);
     }
@@ -83,67 +79,54 @@ class _VideoViewState extends State<VideoView> {
     // Copy the video file
     try {
       await File(videoPath).copy(savePath);
-      log("Video saved to: $savePath");
+      debugPrint("Video saved to: $savePath");
 
       // Save video to the gallery
+      // final isSaved = await GallerySaver.saveVideo(savePath) ?? false;
       final isSaved = await GallerySaver.saveVideo(savePath) ?? false;
       if (isSaved) {
         // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Video downloaded successfully!')),
-        );
-
-        // Trigger media scan using platform-specific method
-        if (Platform.isAndroid) {
-          await const MethodChannel('plugins.flutter.io/gallery_saver')
-              .invokeMethod('saveFile', {'filePath': savePath});
-        } else if (Platform.isIOS) {
-          await const MethodChannel('plugins.flutter.io/gallery_saver')
-              .invokeMethod('saveFile', {'filePath': savePath});
-        }
+        ScaffoldMessenger.of(Get.context!).showSnackBar(const SnackBar(content: Text('Video downloaded successfully!')));
       } else {
-        log('Failed to save video to gallery');
+        debugPrint('Failed to save video to gallery');
       }
     } catch (e) {
-      log('Error saving video: $e');
+      debugPrint('Error saving video: $e');
     }
   }
 
   Future<void> _shareImage() async {
-    Share.shareFiles([widget.videoPath]);
+    final file = XFile(widget.videoPath);
+    await SharePlus.instance.share(ShareParams(files: [file]));
   }
 
   Future<void> _deleteVideo() async {
     final file = File(widget.videoPath);
     try {
       await file.delete();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Video deleted successfully!'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-      Navigator.pop(context);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Video deleted successfully!'), duration: Duration(seconds: 2)),
+        );
+        Get.back();
+      }
     } catch (e) {
-      print("Error deleting file: $e");
+      debugPrint("Error deleting file: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Whats App Status Downloader"),
-      ),
+      appBar: AppBar(title: const Text("WhatsApp Status Saver")),
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           widget.deleteVideo
               ? FloatingActionButton(
                   // backgroundColor: MyColors.secondaryColor,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5)),
-                  heroTag: 'fab_download', // Unique tag for download button
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                  heroTag: 'fab_deleted', // Unique tag for download button
                   onPressed: () {
                     _deleteVideo();
                   },
@@ -151,8 +134,7 @@ class _VideoViewState extends State<VideoView> {
                 )
               : FloatingActionButton(
                   // backgroundColor: MyColors.secondaryColor,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                   heroTag: 'fab_download', // Unique tag for download button
                   onPressed: () {
                     _downloadVideo();
@@ -162,8 +144,7 @@ class _VideoViewState extends State<VideoView> {
           const SizedBox(width: 20.0), // Added spacing between buttons
           FloatingActionButton(
             // backgroundColor: MyColors.secondaryColor,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
             heroTag: 'fab_share', // Unique tag for share button
             onPressed: () {
               _shareImage();
@@ -177,10 +158,7 @@ class _VideoViewState extends State<VideoView> {
         future: _initializeVideoPlayerFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            return Visibility(
-              visible: true,
-              child: Chewie(controller: _chewieController),
-            );
+            return Visibility(visible: true, child: Chewie(controller: _chewieController));
           } else {
             return const Center(child: CircularProgressIndicator());
           }

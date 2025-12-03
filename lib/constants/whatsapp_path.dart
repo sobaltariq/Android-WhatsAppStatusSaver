@@ -16,7 +16,6 @@ class WhatsAppPath {
         return "/storage/emulated/0/WhatsApp/Media/.Statuses";
       }
     } else {
-      // Android versions below 10
       return "/storage/emulated/0/WhatsApp/Media/.Statuses";
     }
   }
@@ -37,4 +36,7 @@ class WhatsAppPath {
       return "/storage/emulated/0/WhatsApp Business/Media/.Statuses";
     }
   }
+
+  static const whatsappDir = "/storage/emulated/0/WhatsAppStatusSaver/WhatsApp";
+  static const whatsappBDir = "/storage/emulated/0/WhatsAppStatusSaver/WhatsApp Business";
 }

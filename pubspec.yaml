@@ -1,4 +1,4 @@
-name: whats_app
+name: whatsapp_status_saver
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.2.2 <4.0.0'
+  sdk: ^3.10.1
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -31,25 +31,23 @@ dependencies:
   flutter:
     sdk: flutter
 
-
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.2
-  url_launcher: ^6.2.1
-  permission_handler: ^11.1.0
-  provider: ^6.1.1
-  path_provider: ^2.1.1
-  image_gallery_saver: ^2.0.3
-  video_player: ^2.8.1
-  chewie: ^1.7.4
-  share_plus: ^7.2.1
-  video_thumbnail: ^0.5.3
-
-  device_info_plus: ^9.1.1
-  gallery_saver: ^2.3.2
-  visibility_detector: ^0.3.3
-  shared_preferences: ^2.2.2
-
+  cupertino_icons: ^1.0.8
+  path_provider: ^2.1.5
+  image_gallery_saver_plus: ^4.0.1
+  video_player: ^2.10.1
+  chewie: ^1.13.0
+  share_plus: ^12.0.1
+  video_thumbnail: ^0.5.6
+  device_info_plus: ^12.3.0
+  gallery_saver_plus: ^3.2.9
+  visibility_detector: ^0.4.0+2
+  shared_preferences: ^2.5.3
+  url_launcher: ^6.3.2
+  permission_handler: ^12.0.1
+  get: ^4.7.3
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_test:
@@ -60,7 +58,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^2.0.0
+  flutter_lints: ^6.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -76,12 +74,13 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/
+  #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
-  # https://flutter.dev/assets-and-images/#resolution-aware
+  # https://flutter.dev/to/resolution-aware-images
 
   # For details regarding adding assets from package dependencies, see
-  # https://flutter.dev/assets-and-images/#from-packages
+  # https://flutter.dev/to/asset-from-package
 
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a
@@ -101,4 +100,4 @@ flutter:
   #         weight: 700
   #
   # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/custom-fonts/#from-packages
+  # see https://flutter.dev/to/font-from-package
